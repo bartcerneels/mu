@@ -5,6 +5,7 @@ from .debugger import DebugMode
 from .pygamezero import PyGameZeroMode
 from .esp import ESPMode
 from .web import WebMode
+from .pyboard import PyBoardMode
 
 __all__ = [
     "PythonMode",
@@ -14,4 +15,5 @@ __all__ = [
     "PyGameZeroMode",
     "ESPMode",
     "WebMode",
+    "PyBoardMode",
 ]
