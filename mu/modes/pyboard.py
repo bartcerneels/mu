@@ -16,11 +16,11 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-import os
-import ctypes
-from subprocess import check_output
+import logging
 from mu.modes.base import MicroPythonMode
 from mu.modes.api import SHARED_APIS
+
+logger = logging.getLogger(__name__)
 
 
 class PyBoardMode(MicroPythonMode):
@@ -67,9 +67,19 @@ class PyBoardMode(MicroPythonMode):
                 """
         buttons = [
             {
-                "name": "serial",
-                "display_name": _("Serial"),
-                "description": _("Open a serial connection to your device."),
+                "name": "run",
+                "display_name": _("Run"),
+                "description": _(
+                    "Run your code directly on the pyboard"
+                    " via the REPL."
+                ),
+                "handler": self.run,
+                "shortcut": "F5",
+            },
+            {
+                "name": "repl",
+                "display_name": _("REPL"),
+                "description": _("Use the REPL to live-code on the board."),
                 "handler": self.toggle_repl,
                 "shortcut": "CTRL+Shift+U",
             }
@@ -82,3 +92,37 @@ class PyBoardMode(MicroPythonMode):
         tips.
         """
         return SHARED_APIS
+
+    def run(self):
+        """
+        Takes the currently active tab, compiles the Python script therein into
+        a hex file and flashes it all onto the connected device.
+        """
+        """
+        if self.repl:
+            message = _("Flashing cannot be performed at the same time as the "
+                        "REPL is active.")
+            information = _("File transfers use the same "
+                            "USB serial connection as the REPL. Toggle the "
+                            "REPL off and try again.")
+            self.view.show_message(message, information)
+            return
+        """
+        logger.info("Running script.")
+        # Grab the Python script.
+        tab = self.view.current_tab
+        if tab is None:
+            # There is no active text editor.
+            message = _("Cannot run anything without any active editor tabs.")
+            information = _(
+                "Running transfers the content of the current tab"
+                " onto the device. It seems like you don't have "
+                " any tabs open."
+            )
+            self.view.show_message(message, information)
+            return
+        python_script = tab.text().split("\n")
+        if not self.repl:
+            self.toggle_repl(None)
+        if self.repl:
+            self.view.repl_pane.send_commands(python_script)
